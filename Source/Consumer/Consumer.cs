@@ -8,25 +8,32 @@ namespace Consumer
 {
 	class Consumer
 	{
+		static ConnectionFactory ConnectionFactory;
+
 		static void Main()
 		{
 			Console.WriteLine("Start Message Consumer Instance!");
 
 			Initialize();
+
+			CreateChannelConnection();
 		}
 
 		private static void Initialize()
 		{
-			var host = new ConnectionFactory()
+			ConnectionFactory = new ConnectionFactory()
 			{
 				HostName = "127.0.0.1",
 				UserName = "guest",
 				Password = "guest"
 			};
+		}
 
-			using var connection = host.CreateConnection();
+		private static void CreateChannelConnection()
+		{
+			using var channel = ConnectionFactory.CreateConnection()
+												 .CreateModel();
 
-			using var channel = connection.CreateModel();
 			channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 
 			var eventingConsumer = new EventingBasicConsumer(channel);
@@ -39,7 +46,7 @@ namespace Consumer
 				var interval = new Random().Next(100, 500);
 				Thread.Sleep(interval);
 
-				Console.WriteLine($"Message: {Encoding.UTF8.GetString(content.Body.ToArray())} - Time: {interval}");
+				Console.WriteLine($"Time: {interval} - Message: {Encoding.UTF8.GetString(content.Body.ToArray())}");
 
 				channel.BasicAck(deliveryTag: content.DeliveryTag, multiple: false);
 			};

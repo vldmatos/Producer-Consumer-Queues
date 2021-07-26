@@ -1,5 +1,4 @@
 ﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Text;
 using System.Threading;
@@ -8,29 +7,38 @@ namespace Producer
 {
 	class Producer
 	{
+		static ConnectionFactory ConnectionFactory;
+
 		static void Main()
 		{
 			Console.WriteLine("Start Message Producer!");
 
 			Initialize();
+
+			SendMessages();
+
+			Console.ReadKey();
 		}
 
 		private static void Initialize()
 		{
-			var host = new ConnectionFactory()
+			ConnectionFactory = new ConnectionFactory()
 			{ 
 				HostName = "127.0.0.1",
 				UserName = "guest",
 				Password = "guest"
 			};
+		}
 
-			using var connection = host.CreateConnection();
-			using var channel = connection.CreateModel();
-
-			while(true)
+		private static void SendMessages()
+		{
+			using var channel = ConnectionFactory.CreateConnection()
+												 .CreateModel();
+			
+			for (int index = 1; index <= 50; index++)
 			{
-				var message = $"Operation performed id: {Guid.NewGuid()}";
-				
+				var message = $"Message id: {index}";
+
 				var properties = channel.CreateBasicProperties();
 				properties.Persistent = true;
 
